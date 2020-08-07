@@ -1,0 +1,167 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% a latex preamble for ASA style with biblatex
+% Author: Yifeng Wan
+% Thu Aug  6, 2020
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\usepackage[style=chicago-authordate, backend=biber, doi=false, url=false, isbn=false, eprint=false, date=year, sorting=nyt, dateabbrev=false]{biblatex}
+
+\addbibresource{} % add bib source here
+
+%%% for book chapters, move page number before book title
+\makeatletter
+\DeclareBibliographyDriver{incollection}{%
+  \usebibmacro{bibindex}%
+  \usebibmacro{shorthand:author}%
+  \usebibmacro{author/editor}%
+  \setunit{\addspace}%
+  \printfield{nameaddon}%
+  \newunit\newblock
+  \ifundef\bbx@lasthash{\usebibmacro{italtitle+stitle}}{}%
+  \usebibmacro{cmsbibsortdate}%
+  \newunit\newblock
+  \ifundef\bbx@lasthash{}{\usebibmacro{italtitle+stitle}}%
+  \setunit{\addperiod\addspace}% 16th ed.
+  \usebibmacro{byauthor}%
+  \setunit{\addperiod\addspace}%
+  \usebibmacro{part+editor+translator}%
+  \ifboolexpr{%
+    test {\iffieldundef{crossref}}%
+    or
+    togl {cms@crossref}%
+  }%
+  {\ifboolexpr{%
+      test {\iffieldundef{xref}}%
+      or
+      togl {cms@crossref}%
+    }%
+  {\setunit{\addperiod\addspace}%
+  % \newcunit\newblock
+  \usebibmacro{volume+pages}% move page number before book title
+  \setunit{\addspace}%
+   \usebibmacro{chapincoll}%
+  \usebibmacro{mtitle+mstitle+vol+part+btitle+bstitle}%
+  \newcunit
+  \iffieldundef{edition}%
+  {}%
+  {\usebibmacro{edition}}%
+  \newcunit
+  \usebibmacro{bybookauthor}%
+  \usebibmacro{byeditor+others}%
+ \newunit\newblock
+  \usebibmacro{ser+num}%
+  \newunit\newblock
+  \usebibmacro{origpubl+loc+year}% 16th ed.
+  \newunit\newblock
+  \printfield{note}%
+  \newunit\newblock
+  \usebibmacro{bibreprint}%
+  \usebibmacro{publ+loc+year}%
+  \newunit\newblock
+  \usebibmacro{pubstate}%
+  \newunit\newblock
+  \printfield{addendum}%
+  \setunit*{\addcomma\addspace}\newblock%
+  \iftoggle{cms@isbn}%
+  {\printfield{isbn}}%
+  {}%
+  \setunit*{\addcomma\addspace}\newblock%
+  \usebibmacro{bib+doi+url}%
+  \newunit\newblock
+  \usebibmacro{pageref}%
+  \newunit\newblock
+  \iftoggle{cms@related}%
+  {\usebibmacro{related:init}%
+    \usebibmacro{related}%
+    \newunit}%
+  {}%
+  \usebibmacro{originally+published+as}%
+  \usebibmacro{finentry}}%
+{\ifboolexpr{% Changed for 16th ed.
+    test {\ifterm}%
+    or
+    test {\ifpunctmark{*}}%
+  }%
+  {\setunit{\addspace\bibsentence}}%
+  {\setunit{\addperiod\addspace}}%
+  \usebibmacro{bibprexref}%
+  \bibxrefcite{\thefield{xref}}%
+  \usebibmacro{bibpostxref}%
+  \newunit\newblock
+  \iftoggle{cms@related}%
+  {\usebibmacro{related:init}%
+    \usebibmacro{related}%
+    \newunit}%
+  {}%
+  \usebibmacro{originally+published+as}%
+  \usebibmacro{finentry}}}%
+{\ifboolexpr{% Changed for 16th ed.
+    test {\ifterm}%
+    or
+    test {\ifpunctmark{*}}%
+  }%
+  {\setunit{\addspace\bibsentence}}%
+  {\setunit{\addperiod\addspace}}%
+  \usebibmacro{bibprexref}%
+  \bibxrefcite{\thefield{crossref}}%
+  \usebibmacro{bibpostxref}%
+  \newunit\newblock
+  \iftoggle{cms@related}%
+  {\usebibmacro{related:init}%
+    \usebibmacro{related}%
+    \newunit}%
+  {}%
+  \usebibmacro{originally+published+as}%
+  \usebibmacro{finentry}}}
+\makeatother
+
+%%%for book chapters, change page number format
+\DeclareFieldFormat[incollection]{pages}{Pp. #1} %
+
+%%% for book chapters, ed. ---> edited by
+\DefineBibliographyStrings{english}{%
+    byeditor  = {edited by}, % for single page number
+}
+
+%%% set editors' given names in initials for incollection entry type.
+\DeclareNameAlias{byeditor}{givenInit-family}%
+\DeclareNameFormat{givenInit-family}{%
+  \usebibmacro{name:given-family}{\namepartfamily}{\namepartgiveni}{\namepartprefix}{\namepartsuffix}%
+  \usebibmacro{name:andothers}}
+
+%%% for online entry type,  visited on --> Retrieved
+%%% format urldate, e.g.,  July 5, 2020
+%%% no punctuation (dot) after year
+%%% url in parentheses
+\DeclareFieldFormat{urldate}{%
+  Retrieved \mkbibmonth{\thefield{urlmonth}}\addspace%
+  \thefield{urlday}\addcomma\addspace%
+  \thefield{urlyear}\nopunct}%
+\DeclareFieldFormat[online]{url}{\mkbibparens{\url{#1}}} %
+
+%%% Enclose article titles in quotes and put article titles in Title Case
+\DeclareFieldFormat[article]{title}{\mkbibquote{#1}} %
+%%% set book titles in Title Case
+\DeclareFieldFormat[book]{title}{%
+  \mkbibemph{#1}\isdot} % for books
+\DeclareFieldFormat{booktitle}{\mkbibemph{#1}} % for edited volumes
+
+% hyperlink both author and year
+\makeatletter
+\let\abx@macro@citeOrig\abx@macro@cite
+\renewbibmacro{cite}{%
+   \bibhyperref{%
+   \let\bibhyperref\relax\relax%
+   \abx@macro@citeOrig%
+   }%
+}
+\let\abx@macro@textciteOrig\abx@macro@textcite
+\renewbibmacro{textcite}{%
+   \bibhyperref{%
+   \let\bibhyperref\relax\relax%
+   \abx@macro@textciteOrig%
+   }%
+}%
+\makeatother
