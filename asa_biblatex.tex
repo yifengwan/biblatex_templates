@@ -6,7 +6,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\usepackage[style=chicago-authordate, backend=biber, doi=false, url=false, isbn=false, eprint=false, date=year, sorting=nyt, dateabbrev=false]{biblatex}
+\usepackage[style=chicago-authordate, backend=biber, doi=false, url=false, isbn=false, eprint=false, date=year, sorting=nyt, dateabbrev=false, mincitenames=1, maxcitenames=2, citetracker]{biblatex}
 
 \addbibresource{} % add bib source here
 
@@ -164,4 +164,13 @@
    \abx@macro@textciteOrig%
    }%
 }%
+\makeatother
+
+%%% for three authors or more, first set full names appearance, then et al.
+\makeatletter
+\AtEveryCitekey{%
+  \ifciteseen
+    {}
+    {\defcounter{maxnames}{6}}%
+}
 \makeatother
