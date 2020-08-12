@@ -174,3 +174,14 @@
     {\defcounter{maxnames}{6}}%
 }
 \makeatother
+
+%%% format in-text citations with page numbers,  (Author 1994:167), no space between year and page number
+\makeatletter
+\DeclareFieldFormat{postnote}{#1}
+\DeclareFieldFormat{multipostnote}{#1}
+\renewcommand*{\bibpagespunct}{\addcolon\addspace}
+\renewcommand{\postnotedelim}{%
+  \iffieldpages{postnote}
+    {\addcolon}
+    {\addspace}}
+\makeatother
