@@ -6,9 +6,78 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\usepackage[style=chicago-authordate, backend=biber, doi=false, url=false, isbn=false, eprint=false, date=year, sorting=nyt, dateabbrev=false, mincitenames=1, maxcitenames=2, citetracker]{biblatex}
+\usepackage[style=chicago-authordate, backend=biber, url=true, doi=false, isbn=false, eprint=false, date=year, sorting=nyt, dateabbrev=false, mincitenames=1, maxcitenames=2, maxbibnames=99, citetracker]{biblatex}
 
 \addbibresource{} % add bib source here
+
+%%%if no volume, remove `no.' before issue number
+\renewbibmacro*{cjournal+ser+vol+num}{% Moved to bbx
+  \usebibmacro{journal+sub}%
+  \setunit*{\addspace}%
+  \printlist[periodplace]{location}%
+  \setunit*{\addspace}%
+  \iffieldundef{series}%
+    {}%
+    {\newcunit
+      \printfield[jourser]{series}%
+      \newcunit}%\setunit*{\addspace}?
+  \ifthenelse{\iffieldundef{year}\AND\iffieldundef{month}}%
+  {\iffieldundef{volume}%
+    {\newcunit%
+      %\printfield[journum]{number}%
+      \printfield{number}%
+      \clearfield{number}%
+      \setunit{\addcomma\addspace}}%
+    {\printfield[jourvol]{volume}%
+      \setunit{\addcomma\addspace}}}%
+  {\printfield[jourvol]{volume}%
+    \newcunit%
+    \printfield[journum]{number}%
+    \clearfield{number}%
+    \setunit{\addcomma\addspace}}% need * here?
+  \printfield{eid}%
+  \newunit}%
+
+%%%remove dashes for repeated authors
+\makeatletter
+\AtEveryBibitem{\global\undef\bbx@lasthash}
+\makeatother
+
+%%%max authors for et al.
+\makeatletter
+\AtEveryCitekey{%
+  \ifciteseen
+    {}
+    {\defcounter{maxnames}{3}}%
+}
+\makeatother
+
+%%%clear url if article but not newspaper article
+\AtEveryBibitem{%
+  \ifboolexpr{test {\ifentrytype{article}} and not test {\iffieldequalstr{entrysubtype}{magazine}}}
+    {\clearfield{url}%
+    \clearfield{urlyear}%
+        }
+    {}%
+}
+%%%clear url if book
+\AtEveryBibitem{%
+  \ifboolexpr{test {\ifentrytype{book}}}
+    {\clearfield{url}%
+     }
+    {}%
+}
+
+%%%specify which part (e.g., page number) of reference
+\makeatletter
+\DeclareFieldFormat{postnote}{#1}
+\DeclareFieldFormat{multipostnote}{#1}
+\renewcommand*{\bibpagespunct}{\addcolon\addspace}
+\renewcommand{\postnotedelim}{%
+  \iffieldpages{postnote}
+    {\addcolon}
+    {\addspace}}
+\makeatother
 
 %%% for book chapters, move page number before book title
 \makeatletter
@@ -140,6 +209,120 @@
   \thefield{urlday}\addcomma\addspace%
   \thefield{urlyear}\nopunct}%
 \DeclareFieldFormat[online]{url}{\mkbibparens{\url{#1}}} %
+\DeclareFieldFormat[article]{url}{\mkbibparens{\url{#1}}}
+
+%%%format newspaper articles
+\makeatletter
+\DeclareBibliographyDriver{article}{%
+  \iffieldequalstr{entrysubtype}{magazine}%
+  {\usebibmacro{bibindex}%
+  \usebibmacro{mag+news+author}%
+  \setunit{\addspace}%
+  \printfield{nameaddon}%
+  \newunit\newblock
+  \usebibmacro{cmsbibsortdate}%
+  \newunit\newblock
+  \usebibmacro{mag+news+title}%
+  \setunit{\addspace}%
+  \usebibmacro{language+transtitle}%
+  \newunit\newblock%
+  \usebibmacro{byauthor}%
+  \newunit\newblock
+  \usebibmacro{part+editor+translator}%
+  \newunit\newblock%
+  \usebibmacro{bibreprint}%
+  \usebibmacro{issuetitle}%
+  \setunit*{\addcomma\addspace}%
+  \usebibmacro{byeditor+others}%
+  \usebibmacro{editorpunct}%\newunit\newblock
+  \printfield{note}%
+  \setunit*{\addcomma\addspace}\newblock%
+  \usebibmacro{mag+news+date}%
+  \newcunit\newblock
+  \usebibmacro{chap+pag}%
+  \newunit\newblock
+  % \usebibmacro{pubstate}% %%% replaced with [Month Day] after newspaper name
+    {\addcomma\addspace%
+    \mkbibdatelong{}{labelmonth}{}%
+  \addspace%
+  \printfield{labelday}%
+ \addperiod\addspace%
+  }%
+  \newunit\newblock
+  \printfield{addendum}%
+  \setunit*{\addcomma\addspace}\newblock%
+  \iftoggle{cms@isbn}%
+  {\printfield{issn}}%
+  {}%
+  \setunit*{\addcomma\addspace}\newblock%
+  % \usebibmacro{bib+doi+url}% %%% replaced with urldate + url
+ \newunit\newblock
+   {\printurldate\addspace%
+ \printfield{url}
+   }%
+  \newunit\newblock
+  \usebibmacro{pageref}%
+  \newunit\newblock
+  \ifboolexpr{%
+    togl {cms@related}%
+    and
+    not test {\iffieldequalstr{relatedtype}{reviewof}}%
+  }%
+  {\usebibmacro{related:init}%
+    \usebibmacro{related}%
+    \newunit}%
+  {}%
+  \usebibmacro{originally+published+as}%
+  \usebibmacro{finentry}}
+  {\usebibmacro{bibindex}%
+  \usebibmacro{author/editor}%
+  \setunit{\addspace}%
+  \printfield{nameaddon}%
+  \newunit\newblock
+  \ifundef{\bbx@lasthash}{\usebibmacro{mag+news+title}\newunit}{}%
+  \usebibmacro{cmsbibsortdate}%
+  \newunit\newblock
+  \ifundef{\bbx@lasthash}{}{\usebibmacro{mag+news+title}}%
+  \setunit{\addspace}%
+  \usebibmacro{language+transtitle}%
+  \setunit*{\addperiod\addspace}\newblock% 16th ed.
+  \usebibmacro{byauthor}%
+  \newunit\newblock
+  \usebibmacro{part+editor+translator}%
+  \newunit\newblock%
+  \usebibmacro{bibreprint}%
+  \usebibmacro{issuetitle}%
+  \setunit*{\addcomma\addspace}%
+  \usebibmacro{byeditor+others}%
+  \usebibmacro{editorpunct}%\newunit\newblock
+  \printfield{note}%
+  \setunit*{\addcomma\addspace}\newblock% (changed for 0.7)??
+  \usebibmacro{journal+issue+year+pages}%
+  \newunit\newblock
+  \usebibmacro{pubstate}%
+  \newunit\newblock
+  \printfield{addendum}%
+  \setunit*{\addcomma\addspace}\newblock%
+  \iftoggle{cms@isbn}%
+  {\printfield{issn}}%
+  {}%
+  \setunit*{\addcomma\addspace}\newblock%
+  \usebibmacro{bib+doi+url}%
+  \newunit\newblock
+  \usebibmacro{pageref}%
+  \newunit\newblock
+  \ifboolexpr{%
+    togl {cms@related}%
+    and
+    not test {\iffieldequalstr{relatedtype}{reviewof}}%
+  }%
+  {\usebibmacro{related:init}%
+    \usebibmacro{related}%
+    \newunit}%
+  {}%
+  \usebibmacro{originally+published+as}%
+  \usebibmacro{finentry}}}
+\makeatother
 
 %%% Enclose article titles in quotes and put article titles in Title Case
 \DeclareFieldFormat[article]{title}{\mkbibquote{#1}} %
@@ -164,24 +347,4 @@
    \abx@macro@textciteOrig%
    }%
 }%
-\makeatother
-
-%%% for three authors or more, first set full names appearance, then et al.
-\makeatletter
-\AtEveryCitekey{%
-  \ifciteseen
-    {}
-    {\defcounter{maxnames}{6}}%
-}
-\makeatother
-
-%%% format in-text citations with page numbers,  (Author 1994:167), no space between year and page number
-\makeatletter
-\DeclareFieldFormat{postnote}{#1}
-\DeclareFieldFormat{multipostnote}{#1}
-\renewcommand*{\bibpagespunct}{\addcolon\addspace}
-\renewcommand{\postnotedelim}{%
-  \iffieldpages{postnote}
-    {\addcolon}
-    {\addspace}}
 \makeatother
